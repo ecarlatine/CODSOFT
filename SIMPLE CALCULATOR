@@ -1,0 +1,110 @@
+
+
+#include <iostream>
+#include <limits>
+
+using namespace std;
+
+double add(double a, double b) {
+    return a + b;
+}
+
+double subtract(double a, double b) {
+    return a - b;
+}
+
+double multiply(double a, double b) {
+    return a * b;
+}
+
+bool divide(double a, double b, double &result) {
+    if (b == 0) {
+        return false; // signal error: division by zero
+    }
+    result = a / b;
+    return true;
+}
+
+double getNumber(const string &prompt) {
+    double value;
+    while (true) {
+        cout << prompt;
+        cin >> value;
+        if (cin.fail()) {
+            cin.clear(); // reset error flags
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // discard bad input
+            cout << "Invalid input. Please enter a valid number.\n";
+        } else {
+            return value;
+        }
+    }
+}
+
+int getOperationChoice() {
+    int choice;
+    while (true) {
+        cout << "\nChoose an operation:\n";
+        cout << "  1. Addition (+)\n";
+        cout << "  2. Subtraction (-)\n";
+        cout << "  3. Multiplication (*)\n";
+        cout << "  4. Division (/)\n";
+        cout << "Enter choice (1-4): ";
+        cin >> choice;
+
+        if (cin.fail() || choice < 1 || choice > 4) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid choice. Please enter a number from 1 to 4.\n";
+        } else {
+            return choice;
+        }
+    }
+}
+
+int main() {
+    cout << "=== Simple Calculator ===\n";
+
+    char again = 'y';
+    while (again == 'y' || again == 'Y') {
+        double num1 = getNumber("Enter the first number: ");
+        double num2 = getNumber("Enter the second number: ");
+        int choice = getOperationChoice();
+
+        double result = 0;
+        char opSymbol = '+';
+        bool success = true;
+
+        switch (choice) {
+            case 1:
+                result = add(num1, num2);
+                opSymbol = '+';
+                break;
+            case 2:
+                result = subtract(num1, num2);
+                opSymbol = '-';
+                break;
+            case 3:
+                result = multiply(num1, num2);
+                opSymbol = '*';
+                break;
+            case 4:
+                success = divide(num1, num2, result);
+                opSymbol = '/';
+                if (!success) {
+                    cout << "\nError: Cannot divide by zero.\n";
+                }
+                break;
+        }
+
+        if (success) {
+            cout << "\nResult: " << num1 << " " << opSymbol << " " << num2
+                 << " = " << result << "\n";
+        }
+
+        cout << "\nPerform another calculation? (y/n): ";
+        cin >> again;
+    }
+
+    cout << "Goodbye!\n";
+    return 0;
+}
