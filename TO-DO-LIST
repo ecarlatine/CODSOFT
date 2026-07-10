@@ -1,0 +1,151 @@
+
+
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <limits>
+
+using namespace std;
+
+const string FILENAME = "tasks.txt";
+
+struct Task {
+    string description;
+    bool done;
+};
+
+vector<Task> tasks;
+
+void loadTasks() {
+    ifstream file(FILENAME);
+    if (!file.is_open()) return;
+
+    string line;
+    while (getline(file, line)) {
+        if (line.empty()) continue;
+        // Format: "0|Task description" or "1|Task description"
+        size_t sep = line.find('|');
+        if (sep == string::npos) continue;
+
+        Task t;
+        t.done = (line.substr(0, sep) == "1");
+        t.description = line.substr(sep + 1);
+        tasks.push_back(t);
+    }
+    file.close();
+}
+
+void saveTasks() {
+    ofstream file(FILENAME);
+    for (const auto &t : tasks) {
+        file << (t.done ? "1" : "0") << "|" << t.description << "\n";
+    }
+    file.close();
+}
+
+void printMenu() {
+    cout << "\n=== To-Do List ===\n";
+    cout << "1. View tasks\n";
+    cout << "2. Add task\n";
+    cout << "3. Mark task as done\n";
+    cout << "4. Delete task\n";
+    cout << "5. Exit\n";
+    cout << "Enter choice (1-5): ";
+}
+
+void viewTasks() {
+    if (tasks.empty()) {
+        cout << "\nNo tasks yet.\n";
+        return;
+    }
+
+    cout << "\nYour tasks:\n";
+    for (size_t i = 0; i < tasks.size(); i++) {
+        cout << "  " << (i + 1) << ". [" << (tasks[i].done ? "x" : " ") << "] "
+             << tasks[i].description << "\n";
+    }
+}
+
+void addTask() {
+    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // clear leftover input
+    cout << "Enter new task: ";
+    string desc;
+    getline(cin, desc);
+
+    if (desc.empty()) {
+        cout << "Task cannot be empty.\n";
+        return;
+    }
+
+    tasks.push_back({desc, false});
+    saveTasks();
+    cout << "Task added.\n";
+}
+
+int getTaskIndex(const string &prompt) {
+    if (tasks.empty()) {
+        cout << "\nNo tasks yet.\n";
+        return -1;
+    }
+
+    viewTasks();
+    cout << prompt;
+    int choice;
+    cin >> choice;
+
+    if (cin.fail() || choice < 1 || choice > static_cast<int>(tasks.size())) {
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cout << "Invalid task number.\n";
+        return -1;
+    }
+
+    return choice - 1;
+}
+
+void markDone() {
+    int index = getTaskIndex("Enter task number to mark as done: ");
+    if (index == -1) return;
+
+    tasks[index].done = true;
+    saveTasks();
+    cout << "Task marked as done.\n";
+}
+
+void deleteTask() {
+    int index = getTaskIndex("Enter task number to delete: ");
+    if (index == -1) return;
+
+    tasks.erase(tasks.begin() + index);
+    saveTasks();
+    cout << "Task deleted.\n";
+}
+
+int main() {
+    loadTasks();
+
+    int choice = 0;
+    while (choice != 5) {
+        printMenu();
+        cin >> choice;
+
+        if (cin.fail()) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid input. Please enter a number from 1 to 5.\n";
+            continue;
+        }
+
+        switch (choice) {
+            case 1: viewTasks(); break;
+            case 2: addTask(); break;
+            case 3: markDone(); break;
+            case 4: deleteTask(); break;
+            case 5: cout << "Goodbye!\n"; break;
+            default: cout << "Invalid choice. Please enter a number from 1 to 5.\n";
+        }
+    }
+
+    return 0;
+}
